@@ -1,0 +1,17 @@
+node_modules
+.next
+.next-check
+dist
+.turbo
+*.env
+*.env.local
+.env*
+!.env.example
+.dev.vars*
+.wrangler/
+.local/
+.neon
+*.tsbuildinfo
+.DS_Store
+prisma/migrations
+artifacts/
