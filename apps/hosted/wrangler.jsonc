@@ -1,0 +1,78 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "confluenceditch",
+  "account_id": "047c2c72488af1dfe1a83f4f9553c501",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-11",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "confluenceditch.deletecookies.dev",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  "r2_buckets": [
+    {
+      "binding": "ARCHIVES",
+      "bucket_name": "confluenceditch-archives",
+      "jurisdiction": "eu"
+    }
+  ],
+  "workflows": [
+    {
+      "binding": "CAPTURE",
+      "name": "confluenceditch-capture",
+      "class_name": "CaptureWorkflow"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "USER_RATE",
+      "namespace_id": "2026111101",
+      "simple": {
+        "limit": 90,
+        "period": 60
+      }
+    },
+    {
+      "name": "EDGE_RATE",
+      "namespace_id": "2026111102",
+      "simple": {
+        "limit": 120,
+        "period": 60
+      }
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "17 * * * *"
+    ]
+  },
+  "limits": {
+    "cpu_ms": 10000
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": false
+    }
+  },
+  "vars": {
+    "APP_ORIGIN": "https://confluenceditch.deletecookies.dev",
+    "CLERK_ISSUER": "https://clerk.confluenceditch.deletecookies.dev",
+    "RELEASE": "hosted-mvp-20261111",
+    "CLERK_JWT_KEY": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzDLxfWTA+xdwdh613Sv/\nbDAxxRX2boykkrpmjVpSJipL6K0pMpy/oPtRPnBzWvXRoTi2ALR3uoha8dOwT90j\nsrKw590Vhic4nqwLdtyG08QZGt4CKsJmE5E8rpIPdAbHvpU30Jk3Vwfos1gVC2DT\nQePB2iz0JY35kc39BjTvwAi+Fr9iDRevGaFQac7k5xY44ViOkAniADdwXUjkp82w\nKM/ZOMr11blrOxEHqKsujI1X11qP0TTSiLQy/Km2X7a1GPYGL/E+3HXdzeCoD6vs\nn2nkGGyQDUgtFn2+PpaIEakNPVmOokOaQEIL8J0eo36Ej60A5BHbXZzjB0KerjP/\nkQIDAQAB\n-----END PUBLIC KEY-----\n"
+  }
+}

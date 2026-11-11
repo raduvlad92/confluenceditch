@@ -1,0 +1,10 @@
+{
+  "name": "@confluenceditch/confluence",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./demo": "./src/demo.ts" },
+  "scripts": { "typecheck": "tsc --noEmit", "test": "tsx --test test/*.test.ts" },
+  "dependencies": { "@confluenceditch/archive": "workspace:*", "zod": "4.3.6" },
+  "devDependencies": { "@types/node": "^22.10.1", "tsx": "4.21.0", "typescript": "^5.7.2" }
+}

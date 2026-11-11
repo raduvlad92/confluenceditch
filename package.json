@@ -1,0 +1,30 @@
+{
+  "name": "confluenceditch",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:takeout": "CONFLUENCE_LOCAL_TEST=1 pnpm --filter @confluenceditch/web dev --hostname 127.0.0.1",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "archive:build": "tsx packages/archive/src/cli.ts build",
+    "archive:verify": "tsx packages/archive/src/cli.ts verify",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "turbo run db:migrate",
+    "db:studio": "cd apps/api && pnpm prisma studio",
+    "build:hosted": "pnpm --filter @confluenceditch/hosted build",
+    "check:hosted": "pnpm --filter @confluenceditch/archive --filter @confluenceditch/confluence --filter @confluenceditch/hosted test && pnpm --filter @confluenceditch/archive --filter @confluenceditch/confluence --filter @confluenceditch/hosted typecheck && pnpm build:hosted",
+    "deploy:hosted": "node scripts/deploy-hosted.mjs"
+  },
+  "devDependencies": {
+    "tsx": "4.21.0",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
