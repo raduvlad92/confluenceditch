@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "0.1.0",
+  "organizationId": "synthetic-organization",
+  "captureId": "synthetic-capture-001",
+  "startedAt": "2026-11-11T09:00:00Z",
+  "completedAt": "2026-11-11T09:05:00Z",
+  "source": {
+    "adapter": "confluence-storage-fixture",
+    "adapterVersion": "0.1.0",
+    "acquisitionPrincipalRef": "confluence:demo-site:user:alice",
+    "namespaces": [{ "id": "demo-site", "siteUrl": "https://confluence.example.invalid/wiki" }]
+  },
+  "scope": {
+    "historyMode": "all_retrievable",
+    "spaces": [{ "namespaceId": "demo-site", "id": "engineering", "key": "ENG", "name": "Engineering" }]
+  },
+  "inventory": {
+    "authority": "selected_scope",
+    "explanation": "Exactly two synthetic documents were supplied. This does not establish any live source coverage.",
+    "documents": [
+      { "namespaceId": "demo-site", "objectType": "page", "id": "1", "spaceId": "engineering", "status": "captured", "observedAt": "2026-11-11T09:01:00Z", "reason": null },
+      { "namespaceId": "demo-site", "objectType": "page", "id": "2", "spaceId": "engineering", "status": "captured", "observedAt": "2026-11-11T09:01:00Z", "reason": null }
+    ]
+  },
+  "capabilities": {
+    "history": { "status": "captured", "observedAt": "2026-11-11T09:02:00Z", "reason": null },
+    "assets": { "status": "captured", "observedAt": "2026-11-11T09:02:00Z", "reason": null },
+    "identities": { "status": "partial", "observedAt": "2026-11-11T09:02:00Z", "reason": "Only the referenced synthetic principal is supplied." },
+    "memberships": { "status": "unknown", "observedAt": "2026-11-11T09:02:00Z", "reason": "No group membership observations were supplied." },
+    "permissions": { "status": "unavailable", "observedAt": "2026-11-11T09:02:00Z", "reason": "The fixture supplies no source permission rules. This does not establish unrestricted access." }
+  },
+  "documents": [
+    {
+      "namespaceId": "demo-site", "objectType": "page", "id": "1", "spaceId": "engineering",
+      "sourceUrl": "https://confluence.example.invalid/wiki/spaces/ENG/pages/1",
+      "title": "Handbook", "parent": null, "parentState": "none",
+      "creatorRef": "confluence:demo-site:user:alice", "ownerRef": null, "lastEditorRef": "confluence:demo-site:user:alice",
+      "labels": ["handbook"], "currentRevisionId": "2",
+      "revisions": [
+        {
+          "id": "1", "title": "Earlier handbook", "authorRef": "confluence:demo-site:user:alice",
+          "modifiedAt": "2026-01-10T08:00:00Z", "status": "captured", "observedAt": "2026-11-11T09:02:00Z", "reason": null,
+          "storage": "<p>This earlier revision remains independently readable.</p>", "assetBindings": []
+        },
+        {
+          "id": "2", "title": "Handbook", "authorRef": "confluence:demo-site:user:alice",
+          "modifiedAt": "2026-11-10T08:00:00Z", "status": "captured", "observedAt": "2026-11-11T09:02:00Z", "reason": null,
+          "storage": "<p><strong>Keep your knowledge.</strong> This paragraph starts with bold text.</p><h2>Überblick</h2><p>Unicode, local links and real file bytes survive.</p><h2>Überblick</h2><ul><li>Read the report<ol><li>Check a file</li></ol></li></ul><ac:task-list><ac:task><ac:task-status>complete</ac:task-status><ac:task-body>Review the sample</ac:task-body></ac:task></ac:task-list><p><ac:link><ri:page ri:content-id=\"2\"/><ac:plain-text-link-body><![CDATA[Open the other handbook]]></ac:plain-text-link-body></ac:link></p><p><ac:link><ri:attachment ri:filename=\"Read me.txt\"/><ac:plain-text-link-body><![CDATA[Open the attachment]]></ac:plain-text-link-body></ac:link></p><ac:structured-macro ac:name=\"code\"><ac:parameter ac:name=\"language\">sh</ac:parameter><ac:plain-text-body><![CDATA[printf 'portable archive\\n'\n]]></ac:plain-text-body></ac:structured-macro>",
+          "assetBindings": [{ "filename": "Read me.txt", "assetId": "file-1", "revisionId": "1" }]
+        }
+      ]
+    },
+    {
+      "namespaceId": "demo-site", "objectType": "page", "id": "2", "spaceId": "engineering",
+      "sourceUrl": "https://confluence.example.invalid/wiki/spaces/ENG/pages/2",
+      "title": "Handbook", "parent": { "namespaceId": "demo-site", "objectType": "page", "id": "1" }, "parentState": "known",
+      "creatorRef": null, "ownerRef": null, "lastEditorRef": null,
+      "labels": [], "currentRevisionId": "1",
+      "revisions": [
+        {
+          "id": "1", "title": "Handbook", "authorRef": null, "modifiedAt": null,
+          "status": "captured", "observedAt": "2026-11-11T09:03:00Z", "reason": null,
+          "storage": "<table><caption>Supported checklist</caption><tbody><tr><th>Item</th><th>Outcome</th></tr><tr><td>Local file</td><td>Included</td></tr></tbody></table><ac:structured-macro ac:name=\"team-dashboard\"><ac:parameter ac:name=\"team\">Engineering</ac:parameter><ac:rich-text-body><p>This macro body is retained as a readable fallback.</p></ac:rich-text-body></ac:structured-macro>",
+          "assetBindings": []
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "namespaceId": "demo-site", "id": "file-1", "revisionId": "1",
+      "document": { "namespaceId": "demo-site", "objectType": "page", "id": "1" },
+      "filename": "Read me.txt", "mediaType": "text/plain",
+      "sourceUrl": "https://confluence.example.invalid/wiki/download/attachments/1/Read%20me.txt?version=1",
+      "observedAt": "2026-11-11T09:03:00Z",
+      "bytesBase64": "SGVsbG8gYXJjaGl2ZSEK",
+      "sha256": "0eda332e1aa33991cce96e8f30b6b292641d37046fb84a94046b7e7ef19c4881"
+    }
+  ],
+  "evidence": [
+    { "namespaceId": "demo-site", "id": "alice", "kind": "principals", "observedAt": "2026-11-11T09:03:00Z", "payload": { "accountId": "alice", "displayName": "Synthetic Alice", "status": "active" } }
+  ]
+}

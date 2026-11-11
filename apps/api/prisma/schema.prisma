@@ -1,0 +1,226 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── better-auth required enums/models ───────────────────────────────────────
+
+enum UserRole {
+  owner
+  client
+}
+
+enum ConnectionStatus {
+  active
+  expired
+  revoked
+}
+
+enum MigrationStatus {
+  pending
+  running
+  paused
+  completed
+  completed_with_errors
+  failed
+  cancelled
+}
+
+enum PageMappingStatus {
+  pending
+  converting
+  pushing
+  done
+  failed
+  skipped
+}
+
+enum LogLevel {
+  info
+  warn
+  error
+}
+
+// ─── better-auth core models (fields must match exactly) ─────────────────────
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  role          UserRole @default(client)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions              Session[]
+  accounts              Account[]
+  confluenceConnections ConfluenceConnection[]
+  notionConnections     NotionConnection[]
+  migrations            Migration[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("verification")
+}
+
+// ─── App models ───────────────────────────────────────────────────────────────
+
+model ConfluenceConnection {
+  id             String           @id @default(uuid())
+  userId         String
+  cloudId        String
+  siteUrl        String
+  siteName       String?
+  accessToken    String
+  refreshToken   String
+  tokenExpiresAt DateTime?
+  scopes         String[]
+  status         ConnectionStatus @default(active)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  migrations Migration[]
+
+  @@unique([userId, cloudId])
+  @@map("confluence_connections")
+}
+
+model NotionConnection {
+  id            String           @id @default(uuid())
+  userId        String
+  workspaceId   String
+  workspaceName String?
+  workspaceIcon String?
+  accessToken   String
+  botId         String?
+  status        ConnectionStatus @default(active)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  migrations Migration[]
+
+  @@unique([userId, workspaceId])
+  @@map("notion_connections")
+}
+
+model Migration {
+  id                     String          @id @default(uuid())
+  userId                 String
+  confluenceConnectionId String
+  notionConnectionId     String
+  label                  String
+  status                 MigrationStatus @default(pending)
+  spaceKeys              String[]
+  notionParentId         String
+  options                Json
+  pagesTotal             Int             @default(0)
+  pagesDone              Int             @default(0)
+  pagesFailed            Int             @default(0)
+  bytesTotal             BigInt          @default(0)
+  bytesDone              BigInt          @default(0)
+  errorSummary           String?
+  startedAt              DateTime?
+  completedAt            DateTime?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  confluenceConnection ConfluenceConnection @relation(fields: [confluenceConnectionId], references: [id])
+  notionConnection     NotionConnection     @relation(fields: [notionConnectionId], references: [id])
+  pageMappings         PageMapping[]
+  logs                 MigrationLog[]
+
+  @@map("migrations")
+}
+
+model PageMapping {
+  id                 String            @id @default(uuid())
+  migrationId        String
+  confluencePageId   String
+  confluenceSpaceKey String
+  confluenceTitle    String?
+  confluenceParentId String?
+  notionPageId       String?
+  notionParentId     String?
+  status             PageMappingStatus @default(pending)
+  errorMessage       String?
+  retryCount         Int               @default(0)
+  attachmentCount    Int               @default(0)
+  attachmentsDone    Int               @default(0)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  migration Migration     @relation(fields: [migrationId], references: [id], onDelete: Cascade)
+  logs      MigrationLog[]
+
+  @@unique([migrationId, confluencePageId])
+  @@index([migrationId, status])
+  @@map("page_mappings")
+}
+
+model MigrationLog {
+  id            String    @id @default(uuid())
+  migrationId   String
+  pageMappingId String?
+  level         LogLevel
+  message       String
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+
+  migration   Migration    @relation(fields: [migrationId], references: [id], onDelete: Cascade)
+  pageMapping PageMapping? @relation(fields: [pageMappingId], references: [id], onDelete: SetNull)
+
+  @@index([migrationId, createdAt(sort: Desc)])
+  @@map("migration_logs")
+}

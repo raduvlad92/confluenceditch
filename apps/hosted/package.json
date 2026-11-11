@@ -1,0 +1,41 @@
+{
+  "name": "@confluenceditch/hosted",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@clerk/backend": "3.27.0",
+    "@clerk/react": "6.18.6",
+    "@confluenceditch/archive": "workspace:^",
+    "@confluenceditch/confluence": "workspace:^",
+    "@neondatabase/serverless": "1.2.0",
+    "fflate": "0.8.2",
+    "lucide-react": "^0.468.0",
+    "react": "19",
+    "react-dom": "19",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261110.1",
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "jose": "6.2.17",
+    "tsx": "4.23.15",
+    "typescript": "^5.7.2",
+    "vite": "8.3.8",
+    "wrangler": "4.160.1"
+  }
+}

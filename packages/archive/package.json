@@ -1,0 +1,24 @@
+{
+  "name": "@confluenceditch/archive",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "archive": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "domhandler": "5.0.3",
+    "fflate": "0.8.2",
+    "htmlparser2": "10.1.0",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "esbuild": "0.27.7",
+    "tsx": "4.21.0",
+    "typescript": "^5.7.2"
+  }
+}

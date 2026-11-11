@@ -1,0 +1,9 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #f5f7fb; color: #17243c; font-family: "Avenir Next", "Segoe UI", sans-serif; }
+button, input, select { font: inherit; }
+.opening { padding: 3rem; }
+.auth { min-height: 100dvh; display: grid; place-items: center; padding: 32px 16px; }
+.auth h1 { margin-bottom: 8px; letter-spacing: -1.2px; font-size: 32px; }
+.auth p { line-height: 1.6; }
+.authNote, .auth a { font-size: 13px; color: #56677f; }
+.account { display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 8px 24px; background: white; border-bottom: 1px solid #e1e7ef; font-size: 12px; color: #56677f; }
