@@ -8,11 +8,16 @@ import type { Env } from "../worker/types"
 const path=new URL("../../../.env.hosted-check.json",import.meta.url)
 test("isolated database: tenant boundaries, idempotency, quotas and disconnect revocation",{skip:!existsSync(path)},async()=>{
   const config=JSON.parse(readFileSync(path,"utf8"))
+  const productionPath=new URL("../../../.env.hosted.json",import.meta.url)
+  if(existsSync(productionPath)) assert.notEqual(new URL(config.DATABASE_URL).hostname,new URL(JSON.parse(readFileSync(productionPath,"utf8")).DATABASE_URL).hostname,"Integration tests require the isolated validation branch")
   const objects=new Map<string,string>()
   const workflows=new Set<string>()
   const env={...config,APP_ORIGIN:"https://confluenceditch.example.test",ARCHIVES:{get:async(key:string)=>objects.has(key)?{json:async()=>JSON.parse(objects.get(key)!),text:async()=>objects.get(key),body:new TextEncoder().encode(objects.get(key))}:null},CAPTURE:{create:async({id}:{id:string})=>{workflows.add(id)},get:async()=>({status:async()=>({status:"running"}),terminate:async()=>{}})}} as unknown as Env
   const a=`security-test-a-${crypto.randomUUID()}`,b=`security-test-b-${crypto.randomUUID()}`
   const sql=database(env)
+  // Only disposable fixture identities exist in this namespace on the validation branch.
+  await sql.transaction([sql`DELETE FROM cd_captures WHERE user_id LIKE 'security-test-%' AND created_at<now()-interval '2 minutes'`,sql`DELETE FROM cd_connections WHERE user_id LIKE 'security-test-%' AND created_at<now()-interval '2 minutes' AND id NOT IN (SELECT connection_id FROM cd_captures)`])
+  try {
   const call=async(user:string,path:string,method="GET",value?:unknown,key?:string)=>{
     const response=await api(new Request(env.APP_ORIGIN+"/api/takeout/"+path,{method,headers:{"content-type":"application/json",...(key?{"idempotency-key":key}:{})},body:value?JSON.stringify(value):undefined}),env,user)
     return response.json() as Promise<any>
@@ -43,4 +48,7 @@ test("isolated database: tenant boundaries, idempotency, quotas and disconnect r
   await call(a,"session","DELETE")
   await assert.rejects(call(a,`captures/${id}/download`),{status:401})
   assert.equal((await sql`SELECT credentials FROM cd_connections WHERE user_id=${a}`)[0].credentials,"")
+  } finally {
+    await sql.transaction([sql`DELETE FROM cd_captures WHERE user_id IN (${a},${b})`,sql`DELETE FROM cd_connections WHERE user_id IN (${a},${b})`])
+  }
 })

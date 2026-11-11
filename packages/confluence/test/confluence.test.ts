@@ -164,3 +164,16 @@ test("hosted source mode retains the bounded scope and verifies independently", 
   assert.equal((await verifyArchive(archive.files)).ok, true)
   assert.match(new TextDecoder().decode(archive.files.get("README.md")), /Hosted Confluence Cloud MVP/)
 })
+
+
+test("provider fetch preserves the runtime global receiver", async () => {
+  let called = false
+  const nativeLike: typeof fetch = async function (this: unknown, input, init) {
+    assert.equal(this, globalThis)
+    called = true
+    return demoFetch(input, init)
+  }
+  const client = new ConfluenceClient(credentials, nativeLike)
+  assert.ok((await client.authenticate()).displayName)
+  assert.ok(called)
+})

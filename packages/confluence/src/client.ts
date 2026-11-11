@@ -86,6 +86,8 @@ export class ConfluenceClient {
     return Object.assign(Object.create(ConfluenceClient.prototype), client) as ConfluenceClient
   }
   constructor(credentials: Credentials, private fetcher: typeof fetch = fetch, private signal?: AbortSignal) {
+    // Workers native fetch requires the global receiver, including when injected.
+    this.fetcher = fetcher.bind(globalThis)
     this.siteUrl = normalizeSiteUrl(credentials.siteUrl)
     if (!z.email().safeParse(credentials.email).success || !credentials.token || credentials.token.length > 4096 || /[\r\n]/.test(credentials.token)) throw new ConfluenceError("INVALID_CREDENTIALS", "Enter your Atlassian email and a valid API token.")
     this.authorization = `Basic ${btoa(String.fromCharCode(...new TextEncoder().encode(`${credentials.email}:${credentials.token}`)))}`
