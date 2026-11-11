@@ -35,3 +35,11 @@ Runtime secrets: `DATABASE_URL`, `CREDENTIAL_KEY`. Public configuration and the 
 Apply the checked-in migration with `pnpm --filter @confluenceditch/hosted exec tsx scripts/migrate.ts /absolute/path/to/ignored-environment.json`. It uses a direct Neon endpoint and refuses to invent connection credentials. Validate schema changes on a separate Neon branch before production. Local account-boundary integration tests use the ignored `.env.hosted-check.json`; they skip when that isolated environment is absent. Unit tests require no provider credentials.
 
 When rotating the Clerk signing key, refresh the public PEM in the Worker configuration. Preserve the credential encryption key across deploys; rotating it requires re-encryption or reconnecting existing connections.
+
+## Deployment evidence (2026-11-11)
+
+- Public source: https://github.com/raduvlad92/confluenceditch. Repository-level GitHub Actions is disabled.
+- All five Clerk DNS records verified under the application subdomain. Open registration and email-code signup/sign-in were completed in external Chrome. Password creation is optional.
+- The live app created Workflow `f0ebef84-5906-4fc8-934e-08c07a5397ea`, which completed a synthetic three-page/one-attachment export. Its authenticated browser download passed independent ZIP CRC, manifest membership and every checksum check.
+- Unauthenticated API access returns HTTP 401. Automated tests separately proved wrong-issuer/other-app rejection, account isolation, idempotency, quota enforcement and disconnect revocation on an isolated Neon branch.
+- Cloudflare Builds is connected to `main`, with `pnpm check:hosted` then `pnpm deploy:hosted`, Node 22 and build caching enabled. Preview-branch builds are explicitly off. The first automatic build is verified separately from this configuration readback.
