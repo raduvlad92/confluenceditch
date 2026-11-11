@@ -177,3 +177,19 @@ test("provider fetch preserves the runtime global receiver", async () => {
   assert.ok((await client.authenticate()).displayName)
   assert.ok(called)
 })
+
+test("a fresh hosted client retains the scoped gateway without sending credentials to a supplied host", async () => {
+  const cloudId = "e4af54a2-8637-4757-a68c-16a2d73c5362"
+  const calls: string[] = []
+  const client = new ConfluenceClient({ ...credentials, cloudId }, async input => {
+    calls.push(String(input))
+    const url = new URL(String(input))
+    assert.equal(url.origin, "https://api.atlassian.com")
+    assert.ok(url.pathname.startsWith(`/ex/confluence/${cloudId}/wiki/api/v2/`))
+    return json({ results: [{ id: "1", key: "TEST", name: "Test" }], _links: {} })
+  })
+  assert.equal(client.cloudId, cloudId)
+  assert.equal((await client.spaces()).data[0].id, "1")
+  assert.equal(calls.length, 1)
+  assert.throws(() => new ConfluenceClient({ ...credentials, cloudId: "https://attacker.invalid/" }))
+})

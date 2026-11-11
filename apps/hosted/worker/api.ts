@@ -41,7 +41,7 @@ export async function api(request: Request, env: Env, userId: string): Promise<R
     const connectionId = crypto.randomUUID()
     const expiresAt = new Date(Date.now()+24*60*60*1000).toISOString()
     const value = {mode:input.mode,siteUrl:client.siteUrl,displayName:account.displayName,expiresAt}
-    const encrypted = await encrypt({...credentials,siteUrl:client.siteUrl},env.CREDENTIAL_KEY,`${userId}:${connectionId}`)
+    const encrypted = await encrypt({...credentials,siteUrl:client.siteUrl,cloudId:client.cloudId},env.CREDENTIAL_KEY,`${userId}:${connectionId}`)
     await sql.transaction([
       sql`SELECT pg_advisory_xact_lock(hashtextextended(${userId},0))`,
       sql`UPDATE cd_connections SET revoked_at=now(),credentials='' WHERE user_id=${userId} AND revoked_at IS NULL`,
@@ -66,15 +66,23 @@ export async function api(request: Request, env: Env, userId: string): Promise<R
     const input=z.object({spaceId:id,pageIds:z.array(id).min(1).max(20).refine(ids=>new Set(ids).size===ids.length),includeAttachments:z.boolean()}).parse(await body(request,8000))
     const command=uuid.parse(request.headers.get("idempotency-key"))
     const fingerprint=JSON.stringify({...input,pageIds:[...input.pageIds].sort()})
-    const prior=await sql`SELECT * FROM cd_captures WHERE user_id=${userId} AND command_id=${command}`
-    if(prior.length) {
-      if(prior[0].fingerprint!==fingerprint || prior[0].connection_id!==connected.id) throw new HttpError(409,"This command was already used for a different selection or connection.")
-      const record=await ownedCapture(env,userId,prior[0].id)
+    const retry = async (): Promise<Response | null> => {
+      const rows=await sql`SELECT * FROM cd_captures WHERE user_id=${userId} AND command_id=${command}`
+      if(!rows.length) return null
+      if(rows[0].fingerprint!==fingerprint || rows[0].connection_id!==connected.id) throw new HttpError(409,"This command was already used for a different selection or connection.")
+      const record=await ownedCapture(env,userId,rows[0].id)
       await ensureWorkflow(env,record)
       return json({capture:await publicCapture(env,record)},202)
     }
+    const prior=await retry()
+    if(prior) return prior
     const quota=await sql`SELECT count(*) FILTER(WHERE user_id=${userId})::int AS own,count(*)::int AS total,bool_or(user_id=${userId} AND status IN ('queued','running')) AS active FROM cd_captures WHERE created_at>now()-interval '24 hours'`
-    if(quota[0].own>=5 || quota[0].total>=30 || quota[0].active) throw new HttpError(429,"The MVP allows one active export and five exports per account per day, with a shared daily limit. Try again later.")
+    if(quota[0].own>=5 || quota[0].total>=30 || quota[0].active) {
+      // Another request may have committed the same command after the first lookup.
+      const concurrent=await retry()
+      if(concurrent) return concurrent
+      throw new HttpError(429,"The MVP allows one active export and five exports per account per day, with a shared daily limit. Try again later.")
+    }
     const client=await source(env,connected)
     const space=(await client.space(input.spaceId)).data
     const pages=[]

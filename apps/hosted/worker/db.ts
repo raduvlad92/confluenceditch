@@ -15,7 +15,10 @@ export async function connection(env: Env, userId: string): Promise<Connection |
 }
 export async function source(env: Env, record: Connection) {
   const credentials = await decrypt<Credentials>(record.credentials, env.CREDENTIAL_KEY, `${record.user_id}:${record.id}`)
-  return new ConfluenceClient(credentials, record.mode === "demo" ? demoFetch : fetch)
+  const client = new ConfluenceClient(credentials, record.mode === "demo" ? demoFetch : fetch)
+  // Connections from the initial deployment did not retain scoped-token routing.
+  if (record.mode === "live" && !credentials.cloudId) await client.authenticate()
+  return client
 }
 export async function ownedCapture(env: Env, userId: string, id: string): Promise<Capture> {
   const rows = await database(env)`SELECT a.* FROM cd_captures a JOIN cd_connections c ON c.id=a.connection_id AND c.user_id=a.user_id WHERE a.id=${id} AND a.user_id=${userId} AND a.expires_at>now() AND c.revoked_at IS NULL AND c.expires_at>now()`
