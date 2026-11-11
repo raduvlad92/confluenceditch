@@ -31,9 +31,9 @@ test("isolated database: tenant boundaries, idempotency, quotas and disconnect r
   const {pages}=await call(a,`pages?spaceId=${spaces[0].id}`)
   const selection={spaceId:spaces[0].id,pageIds:[pages[0].id],includeAttachments:true}
   const command=crypto.randomUUID()
-  const results=await Promise.all([call(a,"captures","POST",selection,command),call(a,"captures","POST",selection,command)])
+  const results=await Promise.all(Array.from({length:12},()=>call(a,"captures","POST",selection,command)))
   const id=results[0].capture.id
-  assert.equal(results[1].capture.id,id)
+  assert.ok(results.every(result=>result.capture.id===id))
   assert.equal(workflows.size,1)
   await assert.rejects(call(b,`captures/${id}`),{status:404})
   const rows=await sql`SELECT generation FROM cd_captures WHERE id=${id}`

@@ -23,7 +23,7 @@ export type Page = z.infer<typeof pageSchema>
 export type Attachment = z.infer<typeof attachmentSchema>
 export type SourceReply<T> = { data: T; bytes: Uint8Array; observedAt: string }
 export type ListReply<T> = SourceReply<T[]> & { cursor: string | null }
-export interface Credentials { siteUrl: string; email: string; token: string }
+export interface Credentials { siteUrl: string; email: string; token: string; cloudId?: string }
 
 export class ConfluenceError extends Error {
   constructor(public code: string, message: string, public status = 400) { super(message); this.name = "ConfluenceError" }
@@ -81,6 +81,7 @@ export class ConfluenceClient {
   private apiPrefix = ""
   private authorization: string
   private accountLabel: string
+  get cloudId(): string | undefined { return this.apiPrefix ? this.apiPrefix.slice("/ex/confluence/".length) : undefined }
   static rebind(client: ConfluenceClient): ConfluenceClient {
     // Local in-memory sessions survive Next's hot reload; use the current adapter behavior.
     return Object.assign(Object.create(ConfluenceClient.prototype), client) as ConfluenceClient
@@ -93,6 +94,10 @@ export class ConfluenceClient {
     this.authorization = `Basic ${btoa(String.fromCharCode(...new TextEncoder().encode(`${credentials.email}:${credentials.token}`)))}`
     this.accountLabel = credentials.email
     this.apiOrigin = this.siteUrl
+    if (credentials.cloudId) {
+      this.apiOrigin = "https://api.atlassian.com"
+      this.apiPrefix = `/ex/confluence/${z.uuid().parse(credentials.cloudId)}`
+    }
   }
   withSignal(signal: AbortSignal): ConfluenceClient {
     const client = Object.assign(Object.create(ConfluenceClient.prototype), this) as ConfluenceClient
